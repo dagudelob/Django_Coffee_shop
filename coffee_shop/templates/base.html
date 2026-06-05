@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}☕ Coffee Shop{% endblock %}</title>
+    
+    <!-- Modern Typography: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Premium Coffee Palette */
+            --coffee-dark: #2C1E16;
+            --coffee-medium: #4A3320;
+            --coffee-light: #8E735B;
+            --cream: #F5F0EA;
+            --accent: #D4A373;
+            
+            --glass-bg: rgba(245, 240, 234, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --shadow: 0 8px 32px 0 rgba(44, 30, 22, 0.1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--cream);
+            color: var(--coffee-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: radial-gradient(circle at top right, #fffdfa 0%, var(--cream) 100%);
+        }
+
+        /* Glassmorphism Navbar */
+        header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--coffee-dark);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--coffee-medium);
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        nav a:hover {
+            color: var(--accent);
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* Main Content Area */
+        main {
+            flex: 1;
+            padding: 3rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--coffee-dark);
+            color: var(--cream);
+            text-align: center;
+            padding: 2rem;
+            margin-top: auto;
+            border-top: 4px solid var(--accent);
+        }
+
+        footer p {
+            margin: 0;
+            font-weight: 300;
+        }
+
+        /* Micro-animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            nav ul {
+                gap: 1rem;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header>
+        <a href="/" class="logo">
+            <span>☕</span>
+            <span>Django Cafe</span>
+        </a>
+        <nav>
+            <ul>
+                <li><a href="/">Inicio 🏠</a></li>
+                <li><a href="#">Menú 🥐</a></li>
+                <li><a href="#">Nosotros ✨</a></li>
+                <li><a href="#">Contacto 📱</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Dynamic Content Block -->
+    <main>
+        {% block content %}
+        <div style="text-align: center; padding: 4rem 0;">
+            <h1 style="font-size: 3rem; margin-bottom: 1rem; color: var(--coffee-dark);">¡Bienvenido a Django Cafe! 🎉</h1>
+            <p style="font-size: 1.2rem; color: var(--coffee-medium);">El mejor café programado con amor y Python. 🐍❤️</p>
+        </div>
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>Hecho con ❤️, ☕ y Django | &copy; {% now "Y" %} Coffee Shop</p>
+    </footer>
+
+</body>
+</html>
