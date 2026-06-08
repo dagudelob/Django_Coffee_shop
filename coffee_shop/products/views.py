@@ -1,6 +1,13 @@
 from django.urls import reverse_lazy
 from django.views import generic
 from .forms import ProductForm
+from .models import Product
+
+
+class ProductListView(generic.ListView):
+    model = Product
+    template_name = "products/list_product.html"
+    context_object_name = "products"
 
 
 class ProductFormView(generic.FormView):
