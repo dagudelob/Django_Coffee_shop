@@ -164,6 +164,8 @@
                 <li><a href="{% url 'products:list_product' %}">Menú 🥐</a></li>
                 
                 {% if user.is_authenticated %}
+                    <li><a href="{% url 'orders:my_orders' %}">Mis Pedidos 📦</a></li>
+                    <li><a href="{% url 'stock:dashboard' %}">Inventario 📊</a></li>
                     <li style="color: var(--coffee-dark); font-weight: 800; font-size: 1.1rem; margin-left: 1rem; border-left: 2px solid var(--accent); padding-left: 1rem;">
                         Hola, {{ user.username }} 👋
                     </li>

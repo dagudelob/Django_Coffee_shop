@@ -1,6 +1,199 @@
-<h1>Agregar Producto</h1>
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Guardar Producto</button>
-</form>
+{% extends 'products/base.html' %}
+
+{% block content %}
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    coffee: {
+                        light: '#8E735B',
+                        medium: '#4A3320',
+                        dark: '#2C1E16',
+                    },
+                    accent: '#D4A373',
+                    cream: '#F5F0EA',
+                }
+            }
+        }
+    }
+</script>
+
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+    <div class="bg-white rounded-[2rem] overflow-hidden shadow-2xl border border-gray-100/80">
+        <!-- Header Banner -->
+        <div class="bg-gradient-to-r from-coffee-dark to-coffee-medium p-8 text-white">
+            <span class="text-xs uppercase tracking-widest text-accent font-bold">Panel de Administración</span>
+            <h1 class="text-3xl font-extrabold mt-1 flex items-center gap-3">
+                <span>✨</span> Agregar Nuevo Producto
+            </h1>
+            <p class="text-gray-300 mt-2">Introduce los detalles de tu nuevo café o repostería artesanal.</p>
+        </div>
+
+        <!-- Form Body -->
+        <form method="post" enctype="multipart/form-data" class="p-8 space-y-6">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-2xl text-red-700 text-sm">
+                    Por favor, corrija los errores a continuación.
+                </div>
+            {% endif %}
+
+            <!-- Name Field -->
+            <div>
+                <label for="id_name" class="block text-sm font-semibold text-coffee-medium mb-2">Nombre del Producto</label>
+                <input type="text" name="name" id="id_name" required maxlength="200" 
+                       class="w-full px-4 py-3 border border-accent rounded-2xl outline-none focus:border-coffee-medium focus:ring-4 focus:ring-accent/20 transition-all duration-200"
+                       placeholder="Ej: Latte Macchiato Caramelizado">
+                {% if form.name.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.name.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Description Field -->
+            <div>
+                <label for="id_description" class="block text-sm font-semibold text-coffee-medium mb-2">Descripción</label>
+                <textarea name="description" id="id_description" required rows="3" maxlength="300"
+                          class="w-full px-4 py-3 border border-accent rounded-2xl outline-none focus:border-coffee-medium focus:ring-4 focus:ring-accent/20 transition-all duration-200"
+                          placeholder="Describe el sabor, ingredientes y aroma del producto..."></textarea>
+                {% if form.description.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Price & Availability Fields (Flex Row) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Price -->
+                <div>
+                    <label for="id_price" class="block text-sm font-semibold text-coffee-medium mb-2">Precio ($)</label>
+                    <input type="number" name="price" id="id_price" required step="0.01" min="0"
+                           class="w-full px-4 py-3 border border-accent rounded-2xl outline-none focus:border-coffee-medium focus:ring-4 focus:ring-accent/20 transition-all duration-200"
+                           placeholder="0.00">
+                    {% if form.price.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.price.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Availability -->
+                <div class="flex items-center justify-start md:justify-center pt-8">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="available" id="id_available" checked class="sr-only peer">
+                        <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-coffee-medium"></div>
+                        <span class="ml-3 text-sm font-semibold text-coffee-medium">Disponible para venta</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Image File Drag & Drop Field -->
+            <div>
+                <label class="block text-sm font-semibold text-coffee-medium mb-2">Imagen del Producto</label>
+                
+                <!-- Hidden Real Input -->
+                <input type="file" name="image" id="id_image" accept="image/*" class="hidden">
+                
+                <!-- Styled Drag & Drop Zone -->
+                <div id="drop-zone" class="border-2 border-dashed border-accent hover:border-coffee-medium bg-cream/10 hover:bg-cream/30 rounded-[2rem] p-8 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center min-h-[200px]">
+                    <div id="upload-icon-container" class="space-y-3">
+                        <span class="text-5xl block animate-bounce" style="animation-duration: 2.5s;">📸</span>
+                        <p class="text-coffee-dark font-semibold">Arrastra tu imagen aquí o haz clic para buscar</p>
+                        <p class="text-xs text-coffee-light">Soporta formatos PNG, JPG, JPEG (máx. 5MB)</p>
+                    </div>
+                    
+                    <!-- Preview Image -->
+                    <div id="preview-container" class="hidden relative w-full max-h-48 rounded-2xl overflow-hidden mt-2">
+                        <img id="image-preview" src="#" alt="Preview" class="mx-auto max-h-48 object-cover rounded-xl shadow-md">
+                        <button type="button" id="remove-image" class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition-all">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-between items-center pt-6 border-t border-gray-100">
+                <a href="{% url 'products:list_product' %}" class="text-coffee-light hover:text-coffee-dark font-bold transition-colors">
+                    Cancelar
+                </a>
+                <button type="submit" class="bg-accent hover:bg-coffee-dark text-white font-bold py-3.5 px-10 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5">
+                    Guardar Producto ✨
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const dropZone = document.getElementById('drop-zone');
+    const imageInput = document.getElementById('id_image');
+    const previewContainer = document.getElementById('preview-container');
+    const imagePreview = document.getElementById('image-preview');
+    const uploadIconContainer = document.getElementById('upload-icon-container');
+    const removeBtn = document.getElementById('remove-image');
+
+    // Trigger file dialog on click
+    dropZone.addEventListener('click', (e) => {
+        // Prevent click when user wants to remove the image
+        if (e.target !== removeBtn && !removeBtn.contains(e.target)) {
+            imageInput.click();
+        }
+    });
+
+    // Handle file selection
+    imageInput.addEventListener('change', () => {
+        handleFiles(imageInput.files);
+    });
+
+    // Drag over styling
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            dropZone.classList.add('bg-cream/40', 'border-coffee-medium');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('bg-cream/40', 'border-coffee-medium');
+        }, false);
+    });
+
+    // Drop handler
+    dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0) {
+            imageInput.files = files; // Bind file to input
+            handleFiles(files);
+        }
+    });
+
+    // Preview generator
+    function handleFiles(files) {
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    previewContainer.classList.remove('hidden');
+                    uploadIconContainer.classList.add('hidden');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+    }
+
+    // Remove Image
+    removeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        imageInput.value = ''; // Reset input
+        previewContainer.classList.add('hidden');
+        uploadIconContainer.classList.remove('hidden');
+    });
+</script>
+{% endblock %}

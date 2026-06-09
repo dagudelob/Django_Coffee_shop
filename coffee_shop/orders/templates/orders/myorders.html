@@ -1,0 +1,115 @@
+{% extends 'products/base.html' %}
+
+{% block content %}
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    coffee: {
+                        light: '#8E735B',
+                        medium: '#4A3320',
+                        dark: '#2C1E16',
+                    },
+                    accent: '#D4A373',
+                    cream: '#F5F0EA',
+                }
+            }
+        }
+    }
+</script>
+
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
+        <div>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-coffee-dark tracking-tight flex items-center gap-3">
+                <span>📦</span> Mis Pedidos
+            </h1>
+            <p class="text-coffee-light mt-2 text-lg">Historial de tus delicias ordenadas</p>
+        </div>
+        <a href="{% url 'products:list_product' %}" class="bg-accent hover:bg-coffee-dark text-white font-bold py-3 px-8 rounded-full shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center gap-2 border-2 border-transparent hover:border-accent">
+            <span>🥐</span> Volver al Menú
+        </a>
+    </div>
+
+    <!-- Orders Container -->
+    {% if orders %}
+        <div class="space-y-8">
+            {% for order in orders %}
+                <div class="bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100/80 group">
+                    <!-- Order Top Banner -->
+                    <div class="bg-gradient-to-r from-coffee-dark to-coffee-medium p-6 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <span class="text-xs uppercase tracking-widest text-accent font-bold">Orden registrada</span>
+                            <h2 class="text-xl md:text-2xl font-bold flex items-center gap-2 mt-1">
+                                Pedido #{{ order.id }}
+                            </h2>
+                            <p class="text-sm text-gray-300 mt-1">
+                                {{ order.created_at|date:"d \d\e F, Y \a \l\a\s H:i" }}
+                            </p>
+                            <p class="text-xs text-gray-300 mt-1 flex items-center gap-1">
+                                👤 A nombre de: <strong class="text-accent">{{ order.user.username }}</strong>
+                            </p>
+                        </div>
+                        <div class="flex flex-col md:items-end gap-2">
+                            <span class="text-xs uppercase tracking-widest text-accent font-bold">Total Pagado</span>
+                            <div class="text-2xl md:text-3xl font-extrabold text-white">
+                                ${{ order.total_value|floatformat:2 }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Items List -->
+                    <div class="p-6">
+                        <h3 class="text-sm font-bold text-coffee-light uppercase tracking-wider mb-4">Detalle de Productos</h3>
+                        <div class="divide-y divide-gray-100">
+                            {% for item in order.items.all %}
+                                <div class="py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 first:pt-0 last:pb-0">
+                                    <div class="flex items-center gap-4">
+                                        <!-- Miniature Image / Icon -->
+                                        <div class="w-16 h-16 rounded-2xl bg-cream flex items-center justify-center text-2xl shadow-sm border border-gray-100 overflow-hidden flex-shrink-0">
+                                            {% if item.product.image %}
+                                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="w-full h-full object-cover">
+                                            {% elif item.product.photo %}
+                                                <img src="{{ item.product.photo.url }}" alt="{{ item.product.name }}" class="w-full h-full object-cover">
+                                            {% else %}
+                                                ☕
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-coffee-dark text-lg">{{ item.product.name }}</h4>
+                                            <p class="text-sm text-gray-500">Cantidad: <span class="font-bold text-coffee-medium">{{ item.quantity }}</span></p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right sm:min-w-[120px] w-full sm:w-auto flex sm:flex-col justify-between sm:justify-center items-center sm:items-end">
+                                        <span class="text-sm text-gray-400 sm:hidden">Precio unitario:</span>
+                                        <span class="text-sm text-gray-500 font-semibold">${{ item.price|floatformat:2 }} cada uno</span>
+                                        <span class="text-lg font-bold text-coffee-dark block mt-1">${{ item.total_price|floatformat:2 }}</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Empty State -->
+        <div class="bg-white rounded-3xl p-12 text-center shadow-lg border border-gray-100 max-w-2xl mx-auto mt-8">
+            <div class="w-24 h-24 bg-cream rounded-full flex items-center justify-center text-4xl mx-auto mb-6 shadow-inner animate-bounce">
+                ☕
+            </div>
+            <h2 class="text-2xl md:text-3xl font-extrabold text-coffee-dark mb-3">Aún no tienes pedidos</h2>
+            <p class="text-coffee-light mb-8 max-w-md mx-auto">
+                ¿Qué tal si visitas nuestro delicioso menú y te deleitas con nuestras especialidades de café y repostería artesanal?
+            </p>
+            <a href="{% url 'products:list_product' %}" class="bg-accent hover:bg-coffee-dark text-white font-bold py-3.5 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 inline-flex items-center gap-2 border-2 border-transparent hover:border-accent">
+                ✨ Ordenar Mi Primer Café
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

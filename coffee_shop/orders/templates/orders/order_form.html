@@ -1,0 +1,115 @@
+{% extends 'products/base.html' %}
+
+{% block content %}
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    coffee: {
+                        light: '#8E735B',
+                        medium: '#4A3320',
+                        dark: '#2C1E16',
+                    },
+                    accent: '#D4A373',
+                    cream: '#F5F0EA',
+                }
+            }
+        }
+    }
+</script>
+
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-100">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-coffee-dark to-coffee-medium p-8 text-white">
+            <span class="text-xs uppercase tracking-widest text-accent font-bold">Formulario de Pedido</span>
+            <h1 class="text-3xl font-extrabold mt-1 flex items-center gap-3">
+                <span>🛒</span> {{ title|default:"Gestionar Pedido" }}
+            </h1>
+            <p class="text-gray-300 mt-2">Personaliza y registra tu orden a nombre de <strong>{{ user.username }}</strong></p>
+        </div>
+
+        <!-- Form body -->
+        <form method="post" class="p-8 space-y-6">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-xl text-red-700 text-sm">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <!-- Formset Section (Order Items) -->
+            <div>
+                <h3 class="text-lg font-bold text-coffee-dark border-b border-gray-100 pb-3 mb-6 flex items-center gap-2">
+                    <span>☕</span> Productos a Ordenar
+                </h3>
+                
+                {{ formset.management_form }}
+                
+                <div class="space-y-6">
+                    {% for item_form in formset %}
+                        <div class="bg-cream/40 p-6 rounded-2xl border border-gray-100 flex flex-col md:flex-row gap-6 items-end relative">
+                            {% for hidden in item_form.hidden_fields %}
+                                {{ hidden }}
+                            {% endfor %}
+                            
+                            <!-- Product Field -->
+                            <div class="flex-grow w-full">
+                                <label class="block text-sm font-semibold text-coffee-medium mb-2">Selecciona un Producto</label>
+                                {{ item_form.product }}
+                            </div>
+                            
+                            <!-- Quantity Field -->
+                            <div class="w-full md:w-32">
+                                <label class="block text-sm font-semibold text-coffee-medium mb-2">Cantidad</label>
+                                {{ item_form.quantity }}
+                            </div>
+
+                            {% if formset.can_delete and item_form.instance.pk %}
+                                <div class="flex items-center gap-2 pb-2">
+                                    {{ item_form.DELETE }}
+                                    <label class="text-sm text-red-600 font-semibold cursor-pointer">Eliminar</label>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-between items-center pt-6 border-t border-gray-100">
+                <a href="{% url 'orders:list' %}" class="text-coffee-light hover:text-coffee-dark font-bold transition-colors">
+                    Cancelar
+                </a>
+                <button type="submit" class="bg-accent hover:bg-coffee-dark text-white font-bold py-3.5 px-10 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5">
+                    Confirmar Pedido ✨
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Extra styles to customize Django form fields -->
+<style>
+    select, input[type="number"] {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #D4A373;
+        border-radius: 12px;
+        background-color: white;
+        color: #2C1E16;
+        font-family: inherit;
+        outline: none;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        transition: all 0.2s;
+    }
+    select:focus, input[type="number"]:focus {
+        border-color: #4A3320;
+        box-shadow: 0 0 0 3px rgba(212, 163, 115, 0.2);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,299 @@
+{% extends 'products/base.html' %}
+
+{% block title %}📦 Inventario y Stock - Coffee Shop{% endblock %}
+
+{% block content %}
+<style>
+    /* Dashboard specific styling */
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .dashboard-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: var(--coffee-dark);
+        margin: 0;
+    }
+
+    /* Stat Cards Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .stat-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px 0 rgba(44, 30, 22, 0.15);
+    }
+
+    .stat-card h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1rem;
+        color: var(--coffee-light);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .stat-card .value {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: var(--coffee-dark);
+        margin: 0;
+    }
+
+    /* Content Layout Split */
+    .content-layout {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+    }
+
+    @media (max-width: 992px) {
+        .content-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Stock List Card & Table */
+    .dashboard-section {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: var(--shadow);
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--coffee-dark);
+        margin-top: 0;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid var(--accent);
+        padding-left: 0.75rem;
+    }
+
+    .stock-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .stock-table th {
+        padding: 1rem;
+        border-bottom: 2px solid rgba(142, 115, 91, 0.2);
+        color: var(--coffee-medium);
+        font-weight: 600;
+    }
+
+    .stock-table td {
+        padding: 1.2rem 1rem;
+        border-bottom: 1px solid rgba(142, 115, 91, 0.1);
+        vertical-align: middle;
+    }
+
+    .stock-table tr:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Status Badges */
+    .badge {
+        display: inline-block;
+        padding: 0.35em 0.65em;
+        font-size: 0.75em;
+        font-weight: 700;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 50rem;
+    }
+
+    .badge-success {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .badge-warning {
+        background-color: #fff3cd;
+        color: #664d03;
+    }
+
+    .badge-danger {
+        background-color: #f8d7da;
+        color: #842029;
+    }
+
+    /* Transaction Timeline */
+    .transaction-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .transaction-item {
+        border-left: 2px solid var(--accent);
+        padding-left: 1.2rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+
+    .transaction-item::before {
+        content: '';
+        width: 10px;
+        height: 10px;
+        background-color: var(--accent);
+        border-radius: 50%;
+        position: absolute;
+        left: -6px;
+        top: 6px;
+    }
+
+    .transaction-meta {
+        font-size: 0.85rem;
+        color: var(--coffee-light);
+        margin-bottom: 0.25rem;
+    }
+
+    .transaction-detail {
+        font-weight: 600;
+        color: var(--coffee-dark);
+    }
+
+    .transaction-notes {
+        font-size: 0.9rem;
+        color: var(--coffee-medium);
+        font-style: italic;
+        margin-top: 0.2rem;
+    }
+
+    .txt-in {
+        color: #0f5132;
+        font-weight: bold;
+    }
+
+    .txt-out {
+        color: #842029;
+        font-weight: bold;
+    }
+</style>
+
+<div class="dashboard-header">
+    <h1 class="dashboard-title">Control de Inventario 📊</h1>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Total de Productos</h3>
+        <p class="value">{{ stocks.count }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Total de Unidades</h3>
+        <p class="value">{{ total_units }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Productos con Bajo Stock</h3>
+        <p class="value">{{ low_stock_count }}</p>
+    </div>
+</div>
+
+<div class="content-layout">
+    <!-- Stock List Table -->
+    <div class="dashboard-section">
+        <h2 class="section-title">Stock Actual</h2>
+        <div style="overflow-x: auto;">
+            <table class="stock-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th>Cantidad Disponible</th>
+                        <th>Estado</th>
+                        <th>Última Actualización</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stock in stocks %}
+                    <tr>
+                        <td style="font-weight: 600; color: var(--coffee-dark);">{{ stock.product.name }}</td>
+                        <td>${{ stock.product.price }}</td>
+                        <td style="font-size: 1.1rem; font-weight: 600;">{{ stock.quantity }}</td>
+                        <td>
+                            {% if stock.quantity == 0 %}
+                                <span class="badge badge-danger">Sin Stock</span>
+                            {% elif stock.quantity < 10 %}
+                                <span class="badge badge-warning">Bajo Stock</span>
+                            {% else %}
+                                <span class="badge badge-success">Disponible</span>
+                            {% endif %}
+                        </td>
+                        <td style="color: var(--coffee-light); font-size: 0.9rem;">
+                            {{ stock.last_updated|date:"d/m/Y H:i" }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--coffee-light); padding: 2rem;">
+                            No hay productos registrados en el inventario.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Transactions Timeline -->
+    <div class="dashboard-section">
+        <h2 class="section-title">Movimientos Recientes</h2>
+        {% if recent_transactions %}
+            <ul class="transaction-list">
+                {% for tx in recent_transactions %}
+                <li class="transaction-item">
+                    <div class="transaction-meta">
+                        {{ tx.created_at|date:"d/m/Y H:i" }}
+                    </div>
+                    <div class="transaction-detail">
+                        {{ tx.product.name }} - 
+                        {% if tx.transaction_type == 'IN' %}
+                            <span class="txt-in">+{{ tx.quantity }} (Entrada)</span>
+                        {% else %}
+                            <span class="txt-out">-{{ tx.quantity }} (Salida)</span>
+                        {% endif %}
+                    </div>
+                    {% if tx.notes %}
+                        <div class="transaction-notes">
+                            "{{ tx.notes }}"
+                        </div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p style="color: var(--coffee-light); text-align: center; padding: 2rem 0;">
+                No hay transacciones registradas recientemente.
+            </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
