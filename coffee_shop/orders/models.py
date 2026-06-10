@@ -1,6 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
 from products.models import Product
+from decimal import Decimal
+
+
+TAX_RATE = Decimal("0.10")
 
 
 class Order(models.Model):
@@ -20,6 +24,14 @@ class Order(models.Model):
     @property
     def total_value(self):
         return sum(item.total_price for item in self.items.all())
+
+    @property
+    def tax_amount(self):
+        return (self.total_value * TAX_RATE).quantize(Decimal("0.01"))
+
+    @property
+    def total_with_tax(self):
+        return self.total_value + self.tax_amount
 
 
 class OrderItem(models.Model):

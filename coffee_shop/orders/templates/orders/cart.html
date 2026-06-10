@@ -1,0 +1,163 @@
+{% extends 'products/base.html' %}
+
+{% block title %}🛒 Mi Carrito | Coffee Shop{% endblock %}
+
+{% block content %}
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    coffee: { light: '#8E735B', medium: '#4A3320', dark: '#2C1E16' },
+                    accent: '#D4A373',
+                    cream: '#F5F0EA',
+                }
+            }
+        }
+    }
+</script>
+
+<div class="container mx-auto px-4 py-8 max-w-5xl">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
+        <div>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-coffee-dark tracking-tight flex items-center gap-3">
+                <span>🛒</span> Mi Carrito
+            </h1>
+            <p class="text-coffee-light mt-2 text-lg">Revisa tus productos antes de confirmar tu pedido</p>
+        </div>
+        <a href="{% url 'products:list_product' %}" class="bg-accent hover:bg-coffee-dark text-white font-bold py-3 px-8 rounded-full shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center gap-2">
+            <span>🥐</span> Seguir Comprando
+        </a>
+    </div>
+
+    {% if cart_items %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Products List (Left Column, 2/3) -->
+        <div class="lg:col-span-2 space-y-4">
+            {% for item in cart_items %}
+            <div class="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-5 flex flex-col sm:flex-row items-center gap-5 border border-gray-100/80 group">
+                <!-- Product Image -->
+                <div class="w-20 h-20 rounded-xl bg-cream flex items-center justify-center text-3xl shadow-sm border border-gray-100 overflow-hidden flex-shrink-0">
+                    {% if item.product.image %}
+                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="w-full h-full object-cover">
+                    {% elif item.product.photo %}
+                        <img src="{{ item.product.photo.url }}" alt="{{ item.product.name }}" class="w-full h-full object-cover">
+                    {% else %}
+                        ☕
+                    {% endif %}
+                </div>
+
+                <!-- Product Info -->
+                <div class="flex-grow text-center sm:text-left">
+                    <h3 class="font-bold text-coffee-dark text-lg">{{ item.product.name }}</h3>
+                    <p class="text-sm text-gray-400 mt-0.5">${{ item.price|floatformat:2 }} c/u</p>
+                </div>
+
+                <!-- Quantity Controls (+/-) -->
+                <div class="flex items-center gap-1">
+                    <!-- Minus Button -->
+                    <form method="post" action="{% url 'orders:cart_update' item.product.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="quantity" value="{{ item.quantity|add:'-1' }}">
+                        <button type="submit" class="w-10 h-10 rounded-full bg-cream hover:bg-red-100 text-coffee-dark hover:text-red-600 font-bold text-xl flex items-center justify-center transition-all duration-200 shadow-sm border border-gray-100">
+                            −
+                        </button>
+                    </form>
+
+                    <!-- Quantity Display -->
+                    <span class="w-12 text-center font-extrabold text-coffee-dark text-lg select-none">{{ item.quantity }}</span>
+
+                    <!-- Plus Button -->
+                    <form method="post" action="{% url 'orders:cart_update' item.product.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="quantity" value="{{ item.quantity|add:'1' }}">
+                        <button type="submit" class="w-10 h-10 rounded-full bg-cream hover:bg-green-100 text-coffee-dark hover:text-green-600 font-bold text-xl flex items-center justify-center transition-all duration-200 shadow-sm border border-gray-100">
+                            +
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Line Total -->
+                <div class="text-right min-w-[90px]">
+                    <span class="font-extrabold text-coffee-dark text-xl">${{ item.total_price|floatformat:2 }}</span>
+                </div>
+
+                <!-- Remove Button -->
+                <form method="post" action="{% url 'orders:cart_remove' item.product.id %}">
+                    {% csrf_token %}
+                    <button type="submit" title="Eliminar producto" class="w-9 h-9 rounded-full bg-red-50 hover:bg-red-500 text-red-400 hover:text-white flex items-center justify-center transition-all duration-200 text-sm">
+                        🗑️
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Order Summary (Right Column, 1/3) -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-[2rem] shadow-xl border border-gray-100/80 overflow-hidden sticky top-28">
+                <!-- Summary Header -->
+                <div class="bg-gradient-to-r from-coffee-dark to-coffee-medium p-6 text-white">
+                    <span class="text-xs uppercase tracking-widest text-accent font-bold">Resumen del Pedido</span>
+                    <h2 class="text-2xl font-extrabold mt-1">Tu Orden</h2>
+                </div>
+
+                <div class="p-6 space-y-4">
+                    <!-- Items count -->
+                    <div class="flex justify-between text-gray-500 text-sm">
+                        <span>Productos ({{ cart|length }} uds)</span>
+                        <span class="font-semibold text-coffee-dark">${{ subtotal|floatformat:2 }}</span>
+                    </div>
+
+                    <!-- Tax -->
+                    <div class="flex justify-between text-gray-500 text-sm">
+                        <span>Impuesto ({{ tax_rate_pct }}%)</span>
+                        <span class="font-semibold text-coffee-dark">${{ tax|floatformat:2 }}</span>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="border-t border-dashed border-gray-200 my-2"></div>
+
+                    <!-- Total -->
+                    <div class="flex justify-between items-center">
+                        <span class="text-lg font-bold text-coffee-dark">Total</span>
+                        <span class="text-3xl font-extrabold text-coffee-dark">${{ total|floatformat:2 }}</span>
+                    </div>
+
+                    <!-- Checkout Button -->
+                    <form method="post" action="{% url 'orders:checkout' %}" class="pt-2">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full bg-accent hover:bg-coffee-dark text-white font-bold py-4 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 text-lg flex items-center justify-center gap-2">
+                            Confirmar Pedido ✨
+                        </button>
+                    </form>
+
+                    <!-- Security note -->
+                    <p class="text-xs text-gray-400 text-center mt-3 flex items-center justify-center gap-1">
+                        🔒 Pago seguro garantizado
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Empty Cart State -->
+    <div class="bg-white rounded-3xl p-12 text-center shadow-lg border border-gray-100 max-w-2xl mx-auto mt-8">
+        <div class="w-24 h-24 bg-cream rounded-full flex items-center justify-center text-5xl mx-auto mb-6 shadow-inner animate-bounce" style="animation-duration: 2.5s;">
+            🛒
+        </div>
+        <h2 class="text-2xl md:text-3xl font-extrabold text-coffee-dark mb-3">Tu carrito está vacío</h2>
+        <p class="text-coffee-light mb-8 max-w-md mx-auto">
+            ¡Explora nuestro delicioso menú y encuentra tu café o repostería artesanal favorita!
+        </p>
+        <a href="{% url 'products:list_product' %}" class="bg-accent hover:bg-coffee-dark text-white font-bold py-3.5 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 inline-flex items-center gap-2">
+            ✨ Ir al Menú
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

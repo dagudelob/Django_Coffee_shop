@@ -104,6 +104,29 @@
             width: 100%;
         }
 
+        /* Cart badge */
+        .cart-badge {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+        .cart-badge .badge {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+            background: #e74c3c;
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 800;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+
         /* Main Content Area */
         main {
             flex: 1;
@@ -130,10 +153,42 @@
             font-weight: 300;
         }
 
+        /* Toast messages */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .toast {
+            padding: 0.8rem 1.2rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            animation: slideIn 0.4s ease-out, fadeOut 0.5s ease-in 3.5s forwards;
+            max-width: 360px;
+        }
+        .toast-success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+        .toast-error   { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+        .toast-warning { background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; }
+        .toast-info    { background: #d1ecf1; color: #0c5460; border-left: 4px solid #17a2b8; }
+
         /* Micro-animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(80px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; display: none; }
         }
 
         /* Responsive Design */
@@ -152,6 +207,17 @@
 </head>
 <body>
 
+    <!-- Toast Messages -->
+    {% if messages %}
+    <div class="toast-container">
+        {% for message in messages %}
+        <div class="toast toast-{{ message.tags|default:'info' }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <!-- Header Navigation -->
     <header>
         <a href="/" class="logo">
@@ -164,8 +230,24 @@
                 <li><a href="{% url 'products:list_product' %}">Menú 🥐</a></li>
                 
                 {% if user.is_authenticated %}
+                    <!-- Cart link (all authenticated users) -->
+                    <li>
+                        <a href="{% url 'orders:cart_detail' %}" class="cart-badge">
+                            🛒 Carrito
+                            {% if cart_item_count %}
+                                <span class="badge">{{ cart_item_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+
+                    <!-- Order history (all authenticated users) -->
                     <li><a href="{% url 'orders:my_orders' %}">Mis Pedidos 📦</a></li>
-                    <li><a href="{% url 'stock:dashboard' %}">Inventario 📊</a></li>
+
+                    <!-- Admin-only: Inventory -->
+                    {% if user.is_staff %}
+                        <li><a href="{% url 'stock:dashboard' %}">Inventario 📊</a></li>
+                    {% endif %}
+
                     <li style="color: var(--coffee-dark); font-weight: 800; font-size: 1.1rem; margin-left: 1rem; border-left: 2px solid var(--accent); padding-left: 1rem;">
                         Hola, {{ user.username }} 👋
                     </li>
