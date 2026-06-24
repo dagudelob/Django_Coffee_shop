@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "users",
     "orders",
     "stock",
+    "rest_framework",
 ]
 
 MIDDLEWARE = [
@@ -128,3 +129,14 @@ MEDIA_ROOT = BASE_DIR / "media"
 LOGIN_REDIRECT_URL = "products:list_product"
 LOGIN_URL = "users:login"
 LOGOUT_REDIRECT_URL = "users:login"
+
+# Django Rest Framework configuration
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+}

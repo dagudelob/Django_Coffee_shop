@@ -24,15 +24,25 @@
 <div class="container mx-auto px-4 py-8">
     <div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
         <h1 class="text-4xl md:text-5xl font-extrabold text-coffee-dark tracking-tight">Nuestro Menú</h1>
-        
-        {% if user.is_staff %}
-        <a href="{% url 'products:add_product' %}" class="bg-accent hover:bg-coffee-dark text-white font-bold py-3 px-8 rounded-full shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center gap-2 border-2 border-transparent hover:border-accent">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            Nuevo Producto
-        </a>
-        {% endif %}
+        <div class="flex flex-wrap gap-4">
+            {% if user.is_authenticated %}
+            <a href="{% url 'orders:cart_detail' %}" class="bg-coffee-dark hover:bg-accent text-white font-bold py-3 px-8 rounded-full shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center gap-2 border-2 border-transparent">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Ver Carrito
+            </a>
+            {% endif %}
+            
+            {% if user.is_staff %}
+            <a href="{% url 'products:add_product' %}" class="bg-accent hover:bg-coffee-dark text-white font-bold py-3 px-8 rounded-full shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center gap-2 border-2 border-transparent hover:border-accent">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Nuevo Producto
+            </a>
+            {% endif %}
+        </div>
     </div>
 
     {% if products %}
@@ -84,16 +94,48 @@
 
                 <!-- Botón Añadir al Carrito (functional POST form) -->
                 {% if product.available and user.is_authenticated %}
-                <form method="post" action="{% url 'orders:cart_add' product.id %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="quantity" value="1">
-                    <button type="submit" class="mt-auto w-full bg-coffee-dark hover:bg-accent text-white font-semibold py-3.5 px-4 rounded-2xl shadow-md transition-all duration-300 flex justify-center items-center gap-3 hover:-translate-y-1 hover:shadow-xl">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform duration-300 group-hover:-rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        Añadir al Carrito
-                    </button>
-                </form>
+                    {% if product.cart_quantity > 0 %}
+                    <div class="mt-auto flex items-center justify-between bg-cream/50 border border-coffee-light/20 rounded-2xl p-2 w-full">
+                        <!-- Minus Button -->
+                        <form method="post" action="{% url 'orders:cart_update' product.id %}" class="m-0">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="{{ product.cart_quantity|add:'-1' }}">
+                            <button type="submit" class="w-10 h-10 rounded-xl bg-white hover:bg-red-50 text-coffee-dark hover:text-red-600 font-extrabold text-lg flex items-center justify-center transition-all duration-200 shadow-sm border border-gray-150">
+                                −
+                            </button>
+                        </form>
+
+                        <!-- Quantity Display -->
+                        <div class="text-center flex flex-col">
+                            <span class="font-extrabold text-coffee-dark text-lg select-none">{{ product.cart_quantity }}</span>
+                            <span class="text-[10px] uppercase tracking-wider text-coffee-light font-semibold">En carrito</span>
+                        </div>
+
+                        <!-- Plus Button -->
+                        <form method="post" action="{% url 'orders:cart_update' product.id %}" class="m-0">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="{{ product.cart_quantity|add:'1' }}">
+                            <button type="submit" class="w-10 h-10 rounded-xl bg-white hover:bg-green-50 text-coffee-dark hover:text-green-600 font-extrabold text-lg flex items-center justify-center transition-all duration-200 shadow-sm border border-gray-150">
+                                +
+                            </button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <form method="post" action="{% url 'orders:cart_add' product.id %}" class="mt-auto flex gap-2 items-center">
+                        {% csrf_token %}
+                        <div class="flex items-center border-2 border-coffee-light/20 rounded-xl bg-white shadow-sm overflow-hidden h-12">
+                            <button type="button" onclick="this.parentNode.querySelector('input[type=number]').stepDown()" class="px-3 h-full text-coffee-medium hover:bg-cream transition-colors duration-200 font-extrabold text-lg select-none">-</button>
+                            <input type="number" name="quantity" value="1" min="1" max="99" class="w-10 text-center border-none focus:outline-none focus:ring-0 font-bold text-coffee-dark h-full p-0 bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                            <button type="button" onclick="this.parentNode.querySelector('input[type=number]').stepUp()" class="px-3 h-full text-coffee-medium hover:bg-cream transition-colors duration-200 font-extrabold text-lg select-none">+</button>
+                        </div>
+                        <button type="submit" class="flex-grow bg-coffee-dark hover:bg-accent text-white font-semibold h-12 px-4 rounded-xl shadow-md transition-all duration-300 flex justify-center items-center gap-2 hover:-translate-y-0.5 hover:shadow-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            Añadir
+                        </button>
+                    </form>
+                    {% endif %}
                 {% elif not product.available %}
                 <button disabled class="mt-auto w-full bg-coffee-dark text-white font-semibold py-3.5 px-4 rounded-2xl shadow-md opacity-50 cursor-not-allowed flex justify-center items-center gap-3">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

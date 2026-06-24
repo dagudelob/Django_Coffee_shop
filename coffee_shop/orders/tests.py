@@ -35,3 +35,47 @@ class OrderModelTest(TestCase):
 
         self.assertEqual(order.total_value, Decimal('10.40'))
 
+
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APITestCase
+
+class OrderAPITests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="apiuser", password="apipassword123")
+        self.staff_user = User.objects.create_superuser(username="adminuser", password="adminpassword123")
+        self.product1 = Product.objects.create(name="Latte", description="Rico", price=3.00)
+
+    def test_list_products(self):
+        url = reverse('product_api')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)  # type: ignore
+        self.assertEqual(len(response.data), 1)  # type: ignore
+
+    def test_create_product_by_anonymous_fails(self):
+        url = reverse('product_api')
+        data = {"name": "Espresso", "description": "Fuerte", "price": "2.50"}
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)  # type: ignore
+
+    def test_create_product_by_staff_succeeds(self):
+        self.client.force_authenticate(user=self.staff_user)  # type: ignore
+        url = reverse('product_api')
+        data = {"name": "Espresso", "description": "Fuerte", "price": "2.50"}
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)  # type: ignore
+        self.assertEqual(Product.objects.filter(name="Espresso").count(), 1)
+
+    def test_create_order_authenticated_succeeds(self):
+        self.client.force_authenticate(user=self.user)  # type: ignore
+        url = reverse('order_api')
+        data = {
+            "items": [
+                {"product": self.product1.id, "quantity": 2}
+            ]
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)  # type: ignore
+        self.assertEqual(Order.objects.count(), 1)
+        self.assertEqual(OrderItem.objects.count(), 1)
+

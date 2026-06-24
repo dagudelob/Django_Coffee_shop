@@ -25,7 +25,7 @@ def cart_add(request, product_id):
     quantity = int(request.POST.get("quantity", 1))
     cart.add(product=product, quantity=quantity)
     messages.success(request, f"'{product.name}' agregado al carrito.")
-    return redirect("orders:cart_detail")
+    return redirect(request.META.get('HTTP_REFERER', 'products:list_product'))
 
 
 @login_required
@@ -61,7 +61,7 @@ def cart_update(request, product_id):
         cart.remove(product)
     else:
         cart.add(product=product, quantity=quantity, override_quantity=True)
-    return redirect("orders:cart_detail")
+    return redirect(request.META.get('HTTP_REFERER', 'orders:cart_detail'))
 
 
 @login_required
@@ -87,7 +87,7 @@ def checkout(request):
         messages.warning(request, "Tu carrito está vacío.")
         return redirect("orders:cart_detail")
 
-    with transaction.atomic():
+    with transaction.atomic():  # type: ignore
         order = Order.objects.create(user=request.user)
         for item in cart:
             OrderItem.objects.create(
@@ -120,3 +120,16 @@ def order_detail(request, pk):
     return render(
         request, "orders/myorders.html", {"orders": [order], "tax_rate": TAX_RATE}
     )
+
+
+# API Views
+from rest_framework import generics, permissions
+from .serializers import OrderSerializer
+
+class OrderListCreateAPIView(generics.ListCreateAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # type: ignore
+        return Order.objects.filter(user=self.request.user)

@@ -21,6 +21,9 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
 
+from products.views import ProductListCreateAPIView
+from orders.views import OrderListCreateAPIView
+
 urlpatterns = [
     path("", TemplateView.as_view(template_name="products/base.html"), name="home"),
     path("admin/", admin.site.urls),
@@ -28,4 +31,7 @@ urlpatterns = [
     path("usuarios/", include("users.urls")),
     path("pedidos/", include("orders.urls")),
     path("inventario/", include("stock.urls")),
+    # REST API endpoints
+    path("api/productos/", ProductListCreateAPIView.as_view(), name="product_api"),
+    path("api/pedidos/", OrderListCreateAPIView.as_view(), name="order_api"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
