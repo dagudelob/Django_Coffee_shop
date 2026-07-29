@@ -1,41 +1,20 @@
-# Python
+# Virtual Environments
+venv/
+.venv/
+env/
+
+# Python Cache
+__pycache__/
 *.pyc
-*~
-__pycache__
-*.py[cod]
-*$py.class
 
-# Virtual environments
-.venv
-venv/
-ENV/
-env/
-env.bak/
-venv.bak/
-
-# Django
-*.log
-local_settings.py
+# Database
+*.sqlite3
 db.sqlite3
-db.sqlite3-journal
-media/
-static/
 
-# Environment variables
+# Environment Variables & Secrets
 .env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+.env.local
 
-# IDEs and Editors
+# IDEs
 .vscode/
 .idea/
-*.swp
-*.swo
-
-# OS files
-.DS_Store
-Thumbs.db
